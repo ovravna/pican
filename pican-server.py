@@ -2,11 +2,11 @@
 
 import socket
 
-from struct import unpack, pack
-
+import struct
+from threading import Thread
 from time import time
 
-import array
+import cangen
 
 TCP_IP = '192.168.42.1'
 TCP_PORT = 5005
@@ -27,17 +27,21 @@ bus0 = False
 now = lambda: int(round(time() * 1000))
 time_0 = now()
 
+sender = Thread(target= cangen.sending)
+sender.start()
+
 while True:
 	recv_msg = can_socket.recv(256)
 
 	t = now() - time_0
-	t_array = [n for n in pack('Q', t)]
-	print('msg:', [hex(m) for m in recv_msg])
+	t_array = [n for n in struct.pack('Q', t)]
+	# print('msg:', [hex(m) for m in recv_msg])
 
 	l = 20
 	msg = [0] * l
 
 	msg[0] = 0x88
+	msg[1] = 0
 	msg[2] = 0x00 if bus0 else 0x10
 	msg[2] |= recv_msg[1]
 	msg[3] = recv_msg[0]
@@ -48,10 +52,11 @@ while True:
 
 
 
-	print('msg:', [hex(m) for m in msg])
+	# print('msg:', [hex(m) for m in msg])
 	# print(bytearray(msg))
-	print(len(bytearray(msg)))
+	# print(len(msg))
 	conn.send(bytearray(msg))
+
 
 
 
