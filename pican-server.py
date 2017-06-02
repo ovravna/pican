@@ -9,28 +9,38 @@ from time import time
 import cangen
 
 TCP_IP = '192.168.42.1'
+CAN_PORT = 'can0'
 TCP_PORT = 5005
 BUFFER_SIZE = 20  # Normally 1024, but we want fast response
 
 can_socket = socket.socket(socket.PF_CAN, socket.SOCK_RAW, socket.CAN_RAW)
-can_socket.bind(('vcan0',))
+can_socket.bind((CAN_PORT,))
 
 tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 tcp_socket.bind((TCP_IP, TCP_PORT))
 tcp_socket.listen(1)
 
+print('Server started with', CAN_PORT)
 
 print('Listening on ', TCP_IP, ':', TCP_PORT, sep='')
 conn, addr = tcp_socket.accept()
 print('Connection address:', addr)
+
+# can_socket.accept()
+print('Connection CAN:', CAN_PORT)
+
 bus0 = False
 now = lambda: int(round(time() * 1000))
 time_0 = now()
 
-sender = Thread(target= cangen.sending)
-sender.start()
+
+if CAN_PORT == 'vcan0':
+	sender = Thread(target= cangen.sending)
+	sender.start()
 
 while True:
+
+
 	recv_msg = can_socket.recv(256)
 
 	t = now() - time_0
